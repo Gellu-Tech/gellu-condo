@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 import { NavLink } from "react-router-dom"
 
 import { cn } from "@/lib/utils"
+import { ROLE_LABELS, type Role } from "@/types/roles"
 
 // ─── Context ────────────────────────────────────────────────────────────────
 
@@ -90,7 +91,7 @@ function SidebarToggle({ className }: { className?: string }) {
 interface SidebarHeaderProps extends React.ComponentProps<"div"> {
   avatar?: string
   name?: string
-  role?: string
+  role?: Role
 }
 
 function SidebarHeader({
@@ -152,8 +153,8 @@ function SidebarHeader({
               </p>
             )}
             {role && (
-              <p className="truncate text-[11px] uppercase tracking-wide text-sidebar-foreground/50">
-                {role}
+              <p className="truncate text-[11px] tracking-wide text-sidebar-foreground/50">
+                {ROLE_LABELS[role]}
               </p>
             )}
           </div>

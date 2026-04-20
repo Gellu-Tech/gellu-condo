@@ -3,9 +3,10 @@ import { LayoutDashboard, Settings } from "lucide-react"
 
 import { DashboardPage } from "@/pages/dashboard"
 import { SettingsPage } from "@/pages/settings"
+import type { Role } from "@/types/roles"
 
 export type Permission = string
-export type Role = string
+export type { Role }
 
 export interface RouteConfig {
   key: string

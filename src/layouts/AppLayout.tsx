@@ -9,19 +9,25 @@ import {
   SidebarItem,
   SidebarFooter,
 } from "@/components/ui/sidebar"
+import { useAuth } from "@/contexts/auth"
 import { routes } from "@/router/routes"
 
 const mainRoutes = routes.filter((r) => r.section === "main")
 const footerRoutes = routes.filter((r) => r.section === "footer")
 
 export function AppLayout() {
+  const { profile, signOut } = useAuth()
+
   return (
     <div className="flex h-screen bg-background p-3">
       <Sidebar className="h-full rounded-xl">
-        <SidebarHeader name="Nome do Usuário" role="Cargo" />
+        <SidebarHeader
+          name={profile?.name ?? "Carregando..."}
+          role={profile?.role}
+        />
 
         <SidebarContent>
-          <SidebarSection label="Main" collapsedLabelClassName="pl-2">
+          <SidebarSection label="Home" collapsedLabelClassName="pl-1">
             {mainRoutes.map((route) => (
               <SidebarItem
                 key={route.key}
@@ -43,7 +49,7 @@ export function AppLayout() {
                 label={route.label!}
               />
             ))}
-            <SidebarItem icon={<LogOut />} label="Sair" onClick={() => {}} />
+            <SidebarItem icon={<LogOut />} label="Sair" onClick={signOut} />
           </SidebarSection>
         </SidebarFooter>
       </Sidebar>
