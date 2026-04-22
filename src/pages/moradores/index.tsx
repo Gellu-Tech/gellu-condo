@@ -66,7 +66,7 @@ export function MoradoresPage() {
     ])
 
     if (tenantData) setTenantSlug(tenantData.slug)
-    if (residentsData) setResidents(residentsData as Resident[])
+    if (residentsData) setResidents(residentsData as unknown as Resident[])
     setLoading(false)
   }
 
