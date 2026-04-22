@@ -5,9 +5,11 @@ import { AuthLayout } from "@/layouts/AuthLayout"
 import { ProtectedRoute } from "./ProtectedRoute"
 import { LoginPage } from "@/pages/auth/login"
 import { RegisterPage } from "@/pages/auth/register"
+import { RegisterResidentPage } from "@/pages/registro"
 import { routes } from "./routes"
 
 const router = createBrowserRouter([
+  { path: "/registro/:slug", element: <RegisterResidentPage /> },
   {
     element: <AuthLayout />,
     children: [
