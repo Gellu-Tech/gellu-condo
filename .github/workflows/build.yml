@@ -32,12 +32,26 @@ jobs:
 
       - name: Push dist to build branch
         run: |
-          cd dist
-          git init
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Save build output before switching branches
+          cp -r dist /tmp/dist-output
+
+          # Checkout build branch (or create orphan if first run)
+          git fetch origin build 2>/dev/null || true
+          if git show-ref --verify --quiet refs/remotes/origin/build; then
+            git checkout -b build origin/build
+          else
+            git checkout --orphan build
+            git rm -rf . --quiet
+          fi
+
+          # Replace content with new build
+          find . -maxdepth 1 -not -name '.git' -not -name '.' -exec rm -rf {} +
+          cp -r /tmp/dist-output/. .
+
+          # Commit and push (regular push — no force, keeps linear history for Hostinger)
           git add .
-          git commit -m "build: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
-          git push --force \
-            "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" \
-            HEAD:build
+          git diff --staged --quiet || git commit -m "build: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+          git push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" build
