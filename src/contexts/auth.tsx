@@ -17,10 +17,17 @@ interface UserProfile {
   tenant_id: string
 }
 
+export interface ResidentProfile {
+  id: string
+  name: string
+  status: "pendente" | "aprovado" | "rejeitado"
+}
+
 interface AuthContextValue {
   session: Session | null
   user: User | null
   profile: UserProfile | null
+  residentProfile: ResidentProfile | null
   loading: boolean
   signOut: () => Promise<void>
 }
@@ -30,6 +37,7 @@ const AuthContext = createContext<AuthContextValue | null>(null)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [profile, setProfile] = useState<UserProfile | null>(null)
+  const [residentProfile, setResidentProfile] = useState<ResidentProfile | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -46,6 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (session) loadProfile(session.user.id)
       else {
         setProfile(null)
+        setResidentProfile(null)
         setLoading(false)
       }
     })
@@ -54,13 +63,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   async function loadProfile(authId: string) {
-    const { data } = await supabase
+    const { data: userData } = await supabase
       .from("users")
       .select("id, name, email, role, tenant_id")
       .eq("auth_id", authId)
-      .single()
+      .maybeSingle()
 
-    setProfile(data ?? null)
+    if (userData) {
+      setProfile(userData as UserProfile)
+      setResidentProfile(null)
+    } else {
+      const { data: residentData } = await supabase
+        .from("residents")
+        .select("id, name, status")
+        .eq("auth_id", authId)
+        .maybeSingle()
+
+      setProfile(null)
+      setResidentProfile(residentData as ResidentProfile | null)
+    }
+
     setLoading(false)
   }
 
@@ -74,6 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         session,
         user: session?.user ?? null,
         profile,
+        residentProfile,
         loading,
         signOut,
       }}

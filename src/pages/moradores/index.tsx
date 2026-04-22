@@ -72,7 +72,11 @@ export function MoradoresPage() {
 
   async function updateStatus(id: string, status: string) {
     setUpdating(id)
-    await supabase.from("residents").update({ status }).eq("id", id)
+    if (status === "aprovado") {
+      await supabase.rpc("approve_resident", { p_resident_id: id })
+    } else {
+      await supabase.from("residents").update({ status }).eq("id", id)
+    }
     setResidents((prev) =>
       prev.map((r) => (r.id === id ? { ...r, status } : r))
     )
