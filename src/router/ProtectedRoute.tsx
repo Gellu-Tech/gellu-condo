@@ -18,6 +18,7 @@ export function ProtectedRoute() {
   }
 
   if (!profile && residentProfile) {
+    if (residentProfile.status === "aprovado") return <Outlet />
     return <AguardandoAprovacaoPage />
   }
 

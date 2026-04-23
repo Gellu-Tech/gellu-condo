@@ -6,7 +6,6 @@ import { SettingsPage } from "@/pages/settings"
 import { MoradoresPage } from "@/pages/moradores"
 import type { Role } from "@/types/roles"
 
-export type Permission = string
 export type { Role }
 
 export interface RouteConfig {
@@ -15,8 +14,7 @@ export interface RouteConfig {
   section?: "main" | "footer"
   label?: string
   icon?: React.ReactNode
-  permission?: Permission
-  requiredRole?: Role
+  allowedRoles?: Role[]
   element: React.ReactNode
 }
 
@@ -35,6 +33,7 @@ export const routes: RouteConfig[] = [
     section: "main",
     label: "Moradores",
     icon: <Users />,
+    allowedRoles: ["admin", "sindico", "administradora", "porteiro"],
     element: <MoradoresPage />,
   },
   {
