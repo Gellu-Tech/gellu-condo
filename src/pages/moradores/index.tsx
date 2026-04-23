@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react"
-import { Copy, Check } from "lucide-react"
+import { Copy, Check, X } from "lucide-react"
+
+import { toast } from "sonner"
 
 import { supabase } from "@/lib/supabase"
 import { useAuth } from "@/contexts/auth"
 import { Button } from "@/components/ui/button"
+import { AlertSuccess, AlertDestructive } from "@/components/ui/alert"
 import { PageHeader } from "@/components/PageHeader"
 import { cn } from "@/lib/utils"
 
@@ -44,6 +47,7 @@ export function MoradoresPage() {
   const [filter, setFilter] = useState<string>("todos")
   const [updating, setUpdating] = useState<string | null>(null)
 
+
   useEffect(() => {
     if (!profile?.tenant_id) return
     fetchData()
@@ -70,17 +74,26 @@ export function MoradoresPage() {
     setLoading(false)
   }
 
-  async function updateStatus(id: string, status: string) {
+  async function updateStatus(id: string, status: "aprovado" | "rejeitado") {
+    const resident = residents.find((r) => r.id === id)
     setUpdating(id)
     if (status === "aprovado") {
       await supabase.rpc("approve_resident", { p_resident_id: id })
     } else {
-      await supabase.from("residents").update({ status }).eq("id", id)
+      await supabase.rpc("reject_resident", { p_resident_id: id })
     }
-    setResidents((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, status } : r))
-    )
     setUpdating(null)
+    setResidents((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r)))
+    const name = resident?.name ?? ""
+    if (status === "aprovado") {
+      toast.custom(() => (
+        <AlertSuccess title="Morador aprovado" description={`${name} foi aprovado com sucesso.`} className="w-89" />
+      ), { duration: 5000 })
+    } else {
+      toast.custom(() => (
+        <AlertDestructive title="Morador rejeitado" description={`${name} foi rejeitado.`} className="w-89" />
+      ), { duration: 5000 })
+    }
   }
 
   function copyLink() {
@@ -89,6 +102,8 @@ export function MoradoresPage() {
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
+
+  const pendingCount = residents.filter((r) => r.status === "pendente").length
 
   const filtered =
     filter === "todos" ? residents : residents.filter((r) => r.status === filter)
@@ -119,6 +134,11 @@ export function MoradoresPage() {
             )}
           >
             {s === "todos" ? "Todos" : STATUS_LABEL[s]}
+            {s === "pendente" && pendingCount > 0 && (
+              <span className="ml-1.5 rounded-full bg-yellow-500 px-1.5 py-0.5 text-xs font-semibold text-white">
+                {pendingCount}
+              </span>
+            )}
           </button>
         ))}
       </div>
@@ -148,7 +168,9 @@ export function MoradoresPage() {
                 <th className="hidden px-4 py-3 text-left font-medium text-muted-foreground md:table-cell">CPF</th>
                 <th className="hidden px-4 py-3 text-left font-medium text-muted-foreground md:table-cell">Telefone</th>
                 <th className="px-4 py-3 text-left font-medium text-muted-foreground">Status</th>
-                <th className="px-4 py-3 text-right font-medium text-muted-foreground">Ações</th>
+                {filter === "pendente" && (
+                  <th className="px-4 py-3 text-right font-medium text-muted-foreground">Ações</th>
+                )}
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -184,28 +206,26 @@ export function MoradoresPage() {
                       {STATUS_LABEL[resident.status] ?? resident.status}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-right">
-                    <div className="flex justify-end gap-2">
-                      {resident.status !== "aprovado" && (
+                  {filter === "pendente" && (
+                    <td className="px-4 py-3 text-right">
+                      <div className="flex justify-end gap-1">
                         <button
                           onClick={() => updateStatus(resident.id, "aprovado")}
-                          disabled={updating === resident.id}
-                          className="text-xs font-medium text-green-600 hover:underline disabled:opacity-50"
+                          disabled={!!updating}
+                          className="rounded-md p-1.5 text-green-600 hover:bg-green-50 disabled:opacity-50 dark:hover:bg-green-950/30"
                         >
-                          Aprovar
+                          <Check className="size-4" />
                         </button>
-                      )}
-                      {resident.status !== "rejeitado" && (
                         <button
                           onClick={() => updateStatus(resident.id, "rejeitado")}
-                          disabled={updating === resident.id}
-                          className="text-xs font-medium text-destructive hover:underline disabled:opacity-50"
+                          disabled={!!updating}
+                          className="rounded-md p-1.5 text-destructive hover:bg-red-50 disabled:opacity-50 dark:hover:bg-red-950/30"
                         >
-                          Rejeitar
+                          <X className="size-4" />
                         </button>
-                      )}
-                    </div>
-                  </td>
+                      </div>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>

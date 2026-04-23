@@ -12,18 +12,27 @@ import {
 import { useAuth } from "@/contexts/auth"
 import { routes } from "@/router/routes"
 
-const mainRoutes = routes.filter((r) => r.section === "main")
-const footerRoutes = routes.filter((r) => r.section === "footer")
-
 export function AppLayout() {
-  const { profile, signOut } = useAuth()
+  const { currentUser, signOut } = useAuth()
+
+  const mainRoutes = routes.filter(
+    (r) =>
+      r.section === "main" &&
+      (!r.allowedRoles || (currentUser && r.allowedRoles.includes(currentUser.role))),
+  )
+
+  const footerRoutes = routes.filter(
+    (r) =>
+      r.section === "footer" &&
+      (!r.allowedRoles || (currentUser && r.allowedRoles.includes(currentUser.role))),
+  )
 
   return (
     <div className="flex h-screen bg-background p-3">
       <Sidebar className="h-full rounded-xl">
         <SidebarHeader
-          name={profile?.name ?? "Carregando..."}
-          role={profile?.role}
+          name={currentUser?.name ?? "Carregando..."}
+          role={currentUser?.role}
         />
 
         <SidebarContent>
